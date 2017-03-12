@@ -1,0 +1,6 @@
+[package]
+name = "webextension-rust-template"
+version = "0.1.0"
+authors = ["Krzysztof Jan Modras <chrmod@chrmod.net>"]
+
+[dependencies]
