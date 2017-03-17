@@ -40,14 +40,16 @@ fn read(mut input: Input) -> String {
 }
 
 fn main() {
-    /*
     loop {
         let f = Input::Stdin(io::stdin());
         read(f);
     }
-    */
-    let f = Input::File(File::open("myfile").unwrap());
-    read(f);
-    /*
-    */
+}
+
+#[test]
+fn it_works() {
+    let file = File::open("tests/fixtures/simple.json").unwrap();
+    let input = Input::File(file);
+    let string = read(input);
+    assert_eq!(string, "{\"a\":1}");
 }
