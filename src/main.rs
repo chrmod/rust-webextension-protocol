@@ -1,13 +1,15 @@
 use std::io;
 use std::str;
 use std::io::Read;
+use std::io::Write;
 use std::io::Stdin;
+use std::io::Stdout;
 use std::fs::File;
 
 extern crate byteorder;
 
 use std::io::Cursor;
-use byteorder::{LittleEndian, ReadBytesExt};
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 enum Input {
     File(File),
@@ -29,20 +31,29 @@ fn read(mut input: Input) -> String {
     input.read_exact(&mut buffer).expect("cannot read size");
     let mut buf = Cursor::new(&buffer);
     let size = buf.read_u32::<LittleEndian>().unwrap();
-    println!("size: {:?}", size);
 
     // Read JSON
     let mut data_buffer = vec![0u8; size as usize];
     input.read_exact(&mut data_buffer).expect("cannot read data");
     let string = str::from_utf8(&data_buffer).unwrap().to_string();
-    println!("data: {}", string);
+
     return string;
+}
+
+fn write(mut output: Stdout, message: String) {
+    let size = message.capacity();
+    let mut sizeVector = vec![];
+    sizeVector.write_u32::<LittleEndian>(size as u32).unwrap();
+    output.write(&sizeVector);
+    output.write(&message.into_bytes());
+    output.flush();
 }
 
 fn main() {
     loop {
         let f = Input::Stdin(io::stdin());
-        read(f);
+        let message = read(f);
+        write(io::stdout(), message.to_string());
     }
 }
 
