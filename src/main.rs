@@ -5,6 +5,7 @@ use std::io::Write;
 use std::io::Stdin;
 use std::io::Stdout;
 use std::fs::File;
+use std::process;
 
 extern crate byteorder;
 
@@ -28,7 +29,10 @@ impl Read for Input {
 fn read(mut input: Input) -> String {
     // Read JSON size
     let mut buffer = [0; 4];
-    input.read_exact(&mut buffer).expect("cannot read size");
+    match input.read_exact(&mut buffer) {
+        Ok(_) => {},
+        Err(e) => process::exit(1),
+    }
     let mut buf = Cursor::new(&buffer);
     let size = buf.read_u32::<LittleEndian>().unwrap();
 
