@@ -12,6 +12,14 @@ extern crate byteorder;
 use std::io::Cursor;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
+// source: http://stackoverflow.com/a/27590832/1877270
+macro_rules! println_stderr(
+    ($($arg:tt)*) => { {
+        let r = writeln!(&mut ::std::io::stderr(), $($arg)*);
+        r.expect("failed printing to stderr");
+    } }
+);
+
 enum Input {
     File(File),
     Stdin(Stdin),
@@ -31,15 +39,20 @@ fn read(mut input: Input) -> String {
     let mut buffer = [0; 4];
     match input.read_exact(&mut buffer) {
         Ok(_) => {},
-        Err(e) => process::exit(1),
+        Err(e) => {
+            println_stderr!("Noting more to read - exiting");
+            process::exit(1);
+        },
     }
     let mut buf = Cursor::new(&buffer);
     let size = buf.read_u32::<LittleEndian>().unwrap();
+    println_stderr!("going to read {} bytes", size);
 
     // Read JSON
     let mut data_buffer = vec![0u8; size as usize];
     input.read_exact(&mut data_buffer).expect("cannot read data");
     let string = str::from_utf8(&data_buffer).unwrap().to_string();
+    println_stderr!("received: {}", string);
 
     return string;
 }
@@ -54,6 +67,7 @@ fn write(mut output: Stdout, message: String) {
 }
 
 fn main() {
+    println_stderr!("starting new process");
     loop {
         let f = Input::Stdin(io::stdin());
         let message = read(f);
