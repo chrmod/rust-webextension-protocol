@@ -1,9 +1,11 @@
 use std::io;
 use std::str;
+use std::fs;
 use std::io::Read;
 use std::io::Write;
 use std::io::Stdin;
 use std::io::Stdout;
+use std::io::Error;
 use std::fs::File;
 use std::process;
 
@@ -34,6 +36,27 @@ impl Read for Input {
     }
 }
 
+enum Output {
+    File(File),
+    Stdout(Stdout),
+}
+
+impl Write for Output {
+    fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
+        match *self {
+            Output::File(ref mut file) => file.write(buf),
+            Output::Stdout(ref mut stdout) => stdout.write(buf),
+        }
+    }
+
+    fn flush(&mut self) -> Result<(), Error> {
+        match *self {
+            Output::File(ref mut file) => file.flush(),
+            Output::Stdout(ref mut stdout) => stdout.flush(),
+        }
+    }
+}
+
 fn read(mut input: Input) -> String {
     // Read JSON size
     let mut buffer = [0; 4];
@@ -57,7 +80,7 @@ fn read(mut input: Input) -> String {
     return string;
 }
 
-fn write(mut output: Stdout, message: String) {
+fn write(mut output: Output, message: String) {
     let size = message.capacity();
     let mut sizeVector = vec![];
     sizeVector.write_u32::<LittleEndian>(size as u32).unwrap();
@@ -71,14 +94,29 @@ fn main() {
     loop {
         let f = Input::Stdin(io::stdin());
         let message = read(f);
-        write(io::stdout(), message.to_string());
+        let output = Output::Stdout(io::stdout());
+        write(output, message.to_string());
     }
 }
 
 #[test]
-fn it_works() {
+fn read_fixture_test() {
     let file = File::open("tests/fixtures/simple.json").unwrap();
     let input = Input::File(file);
     let string = read(input);
     assert_eq!(string, "{\"a\":1}");
+}
+
+#[test]
+fn write_read_test() {
+    let file_path = "/tmp/test.json";
+    let string = "{\"a\":1}";
+    let file = File::create(file_path).unwrap();
+    let output = Output::File(file);
+    write(output, string.to_string());
+    let file2 = File::open(file_path).unwrap();
+    let input = Input::File(file2);
+    let read_string = read(input);
+    assert_eq!(read_string, string);
+    fs::remove_file(file_path);
 }
