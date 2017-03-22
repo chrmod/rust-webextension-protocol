@@ -1,3 +1,5 @@
+extern crate byteorder;
+
 use std::str;
 use std::process;
 use std::io;

@@ -3,5 +3,9 @@ name = "webextension-rust-template"
 version = "0.1.0"
 authors = ["Krzysztof Jan Modras <chrmod@chrmod.net>"]
 
+[lib]
+name = "protocol"
+path = "src/lib.rs"
+
 [dependencies]
 byteorder = "1.0.0"
