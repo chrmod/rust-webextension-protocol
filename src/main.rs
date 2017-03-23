@@ -1,4 +1,4 @@
-extern crate protocol;
+extern crate webextension_rust_template as protocol;
 use std::io;
 
 fn main() {
