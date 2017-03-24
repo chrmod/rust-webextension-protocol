@@ -56,6 +56,11 @@ pub fn read(mut input: Input) -> Result<String, Error> {
     return Ok(string);
 }
 
+pub fn read_stdin() -> Result<String, Error> {
+    let f = Input::Stdin(io::stdin());
+    return read(f);
+}
+
 pub enum Output {
     File(File),
     Stdout(Stdout),
@@ -84,4 +89,9 @@ pub fn write(mut output: Output, message: String) {
     output.write(&sizeVector);
     output.write(&message.into_bytes());
     output.flush();
+}
+
+pub fn write_stdout(message: String) {
+    let output = Output::Stdout(io::stdout());
+    write(output, message.to_string());
 }
