@@ -1,7 +1,6 @@
 extern crate byteorder;
 
 use std::str;
-use std::process;
 use std::io;
 use std::io::Stdin;
 use std::io::Stdout;
@@ -34,14 +33,14 @@ impl Read for Input {
     }
 }
 
-pub fn read(mut input: Input) -> String {
+pub fn read(mut input: Input) -> Result<String, Error> {
     // Read JSON size
     let mut buffer = [0; 4];
     match input.read_exact(&mut buffer) {
         Ok(_) => {},
         Err(e) => {
             println_stderr!("Noting more to read - exiting");
-            process::exit(1);
+            return Err(e);
         },
     }
     let mut buf = Cursor::new(&buffer);
@@ -54,7 +53,7 @@ pub fn read(mut input: Input) -> String {
     let string = str::from_utf8(&data_buffer).unwrap().to_string();
     println_stderr!("received: {}", string);
 
-    return string;
+    return Ok(string);
 }
 
 pub enum Output {
