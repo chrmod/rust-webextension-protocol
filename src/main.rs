@@ -1,12 +1,16 @@
+#[macro_use(println_stderr)]
 extern crate webextension_rust_template as protocol;
+use std::io::Write;
 use std::process;
 
 fn main() {
     loop {
-        match protocol::read_stdin() {
-            Ok(m) => protocol::write_stdout(m),
+        let message = match protocol::read_stdin() {
+            Ok(m) => m,
             Err(_) => process::exit(1),
         };
+        println_stderr!("received {}", message);
+        protocol::write_stdout(message);
     }
 }
 

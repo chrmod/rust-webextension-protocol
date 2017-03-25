@@ -12,6 +12,7 @@ use std::fs::File;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 // source: http://stackoverflow.com/a/27590832/1877270
+#[macro_export]
 macro_rules! println_stderr(
     ($($arg:tt)*) => { {
         let r = writeln!(&mut ::std::io::stderr(), $($arg)*);
