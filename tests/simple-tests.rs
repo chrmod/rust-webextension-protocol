@@ -1,4 +1,4 @@
-extern crate webextension_rust_template as protocol;
+extern crate webextension_protocol as protocol;
 
 use std::fs::File;
 use std::fs;

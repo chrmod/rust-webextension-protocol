@@ -1,5 +1,5 @@
 #[macro_use(println_stderr)]
-extern crate webextension_rust_template as protocol;
+extern crate webextension_protocol as protocol;
 use std::io::Write;
 use std::process;
 

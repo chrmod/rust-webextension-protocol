@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-cat tests/fixtures/simple.json | target/debug/webextension-rust-template
+cargo build --example echo
+cat tests/fixtures/simple.json | target/debug/examples/echo
