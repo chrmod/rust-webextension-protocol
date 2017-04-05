@@ -22,5 +22,5 @@ fn write_read_test() {
     let input = protocol::Input::File(file2);
     let read_string = protocol::read(input).unwrap();
     assert_eq!(read_string, string);
-    fs::remove_file(file_path);
+    fs::remove_file(file_path).unwrap();
 }
