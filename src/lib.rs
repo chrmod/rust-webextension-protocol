@@ -85,11 +85,20 @@ impl Write for Output {
 
 pub fn write(mut output: Output, message: String) {
     let size = message.capacity();
-    let mut sizeVector = vec![];
-    sizeVector.write_u32::<LittleEndian>(size as u32).unwrap();
-    output.write(&sizeVector);
-    output.write(&message.into_bytes());
-    output.flush();
+    let mut size_vector = vec![];
+    size_vector.write_u32::<LittleEndian>(size as u32).unwrap();
+    match output.write(&size_vector) {
+        Ok(_) => {},
+        Err(_) => {},
+    };
+    match output.write(&message.into_bytes()) {
+        Ok(_) => {},
+        Err(_) => {},
+    };
+    match output.flush() {
+        Ok(_) => {},
+        Err(_) => {},
+    };
 }
 
 pub fn write_stdout(message: String) {
