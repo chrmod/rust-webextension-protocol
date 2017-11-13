@@ -10,7 +10,7 @@ fn main() {
             Err(_) => process::exit(1),
         };
         println_stderr!("received {}", message);
-        protocol::write_stdout(message);
+        protocol::write_stdout(&message);
     }
 }
 

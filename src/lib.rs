@@ -54,12 +54,12 @@ pub fn read(mut input: Input) -> Result<String, Error> {
     let string = str::from_utf8(&data_buffer).unwrap().to_string();
     println_stderr!("received: {}", string);
 
-    return Ok(string);
+    Ok(string)
 }
 
 pub fn read_stdin() -> Result<String, Error> {
     let f = Input::Stdin(io::stdin());
-    return read(f);
+    read(f)
 }
 
 pub enum Output {
@@ -88,20 +88,17 @@ pub fn write(mut output: Output, message: String) {
     let mut size_vector = vec![];
     size_vector.write_u32::<LittleEndian>(size as u32).unwrap();
     match output.write(&size_vector) {
-        Ok(_) => {},
-        Err(_) => {},
+        Ok(_) | Err(_) => {},
     };
     match output.write(&message.into_bytes()) {
-        Ok(_) => {},
-        Err(_) => {},
+        Ok(_) | Err(_) => {},
     };
     match output.flush() {
-        Ok(_) => {},
-        Err(_) => {},
+        Ok(_) | Err(_) => {},
     };
 }
 
-pub fn write_stdout(message: String) {
+pub fn write_stdout(message: &str) {
     let output = Output::Stdout(io::stdout());
     write(output, message.to_string());
 }
