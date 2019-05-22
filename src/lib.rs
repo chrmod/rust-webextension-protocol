@@ -1,104 +1,83 @@
-extern crate byteorder;
+//! This repository is a set of helper functions for working with the
+//! Native Messaging protocol, which is a way for webextension to exchange messages
+//! with native applications.
+//!
+//! Read more about native messaging here:
+//! * <https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Native_messaging>
+//! * <https://developer.chrome.com/extensions/nativeMessaging>
+//!
+//! # Example usage
+//!
+//! Simple echo application:
+//!
+//! ```rust,ignore
+//! use std::{
+//!     io::{
+//!         self,
+//!         Write
+//!     },
+//!     process
+//! };
+//!
+//! fn main() -> io::Result<()> {
+//!     loop {
+//!         let message = webextension_protocol::read_stdin::<String>()?;
+//!         eprintln!("received {}", message);
+//!         webextension_protocol::write_stdout(&message)?;
+//!     }
+//! }
+//! ```
 
-use std::str;
-use std::io;
-use std::io::Stdin;
-use std::io::Stdout;
-use std::io::Read;
-use std::io::Error;
-use std::io::Write;
-use std::io::Cursor;
-use std::fs::File;
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+#![cfg_attr(test, deny(warnings))]
+#![deny(unused, missing_docs, unused_import_braces, unused_qualifications)]
+#![deny(rust_2018_idioms)] // this badly-named lint actually produces errors when Rust 2015 idioms are used
 
-// source: http://stackoverflow.com/a/27590832/1877270
-#[macro_export]
-macro_rules! println_stderr(
-    ($($arg:tt)*) => { {
-        let r = writeln!(&mut ::std::io::stderr(), $($arg)*);
-        r.expect("failed printing to stderr");
-    } }
-);
+use std::io::{
+    self,
+    Cursor,
+    prelude::*
+};
+use byteorder::{
+    LittleEndian,
+    ReadBytesExt,
+    WriteBytesExt
+};
+use serde::{
+    de::DeserializeOwned,
+    ser::Serialize
+};
 
-pub enum Input {
-    File(File),
-    Stdin(Stdin),
-}
-
-impl Read for Input {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        match *self {
-            Input::File(ref mut file) => file.read(buf),
-            Input::Stdin(ref mut stdin) => stdin.read(buf),
-        }
-    }
-}
-
-pub fn read(mut input: Input) -> Result<String, Error> {
+/// Reads a JSON message from the given reader.
+pub fn read<T: DeserializeOwned, I: Read>(mut input: I) -> io::Result<T> {
     // Read JSON size
     let mut buffer = [0; 4];
-    match input.read_exact(&mut buffer) {
-        Ok(_) => {},
-        Err(e) => {
-            println_stderr!("Noting more to read - exiting");
-            return Err(e);
-        },
-    }
+    input.read_exact(&mut buffer)?;
     let mut buf = Cursor::new(&buffer);
     let size = buf.read_u32::<LittleEndian>().unwrap();
-    println_stderr!("going to read {} bytes", size);
-
     // Read JSON
     let mut data_buffer = vec![0u8; size as usize];
-    input.read_exact(&mut data_buffer).expect("cannot read data");
-    let string = str::from_utf8(&data_buffer).unwrap().to_string();
-    println_stderr!("received: {}", string);
-
-    Ok(string)
+    input.read_exact(&mut data_buffer)?;
+    Ok(serde_json::from_slice(&data_buffer)?)
 }
 
-pub fn read_stdin() -> Result<String, Error> {
-    let f = Input::Stdin(io::stdin());
-    read(f)
+/// Reads a JSON message from the standard input.
+pub fn read_stdin<T: DeserializeOwned>() -> io::Result<T> {
+    read(io::stdin())
 }
 
-pub enum Output {
-    File(File),
-    Stdout(Stdout),
-}
-
-impl Write for Output {
-    fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
-        match *self {
-            Output::File(ref mut file) => file.write(buf),
-            Output::Stdout(ref mut stdout) => stdout.write(buf),
-        }
-    }
-
-    fn flush(&mut self) -> Result<(), Error> {
-        match *self {
-            Output::File(ref mut file) => file.flush(),
-            Output::Stdout(ref mut stdout) => stdout.flush(),
-        }
-    }
-}
-
-pub fn write(mut output: Output, message: String) {
-    let size = message.capacity();
-    let mut size_vector = vec![];
+/// Writes a JSON message to the given writer.
+pub fn write<T: Serialize, O: Write>(mut output: O, message: &T) -> io::Result<()> {
+    let message = serde_json::to_string(message)?; //TODO maybe this can be skipped?
+    let size = message.len(); //TODO this should probably be len?
+    let mut size_vector = Vec::default();
     size_vector.write_u32::<LittleEndian>(size as u32).unwrap();
-    match output.write(&size_vector) {
-        Ok(_) | Err(_) => {},
-    };
-    match output.write(&message.into_bytes()) {
-        Ok(_) | Err(_) => {},
-    };
-    match output.flush() {
-        Ok(_) | Err(_) => {},
-    };
+    output.write(&size_vector)?;
+    output.write(&message.into_bytes())?;
+    output.flush()?;
+    Ok(())
 }
 
-pub fn write_stdout(message: &str) {
-    let output = Output::Stdout(io::stdout());
-    write(output, message.to_string());
+/// Writes a JSON message to the standard output.
+pub fn write_stdout<T: Serialize>(message: &T) -> io::Result<()> {
+    write(io::stdout(), message)
 }

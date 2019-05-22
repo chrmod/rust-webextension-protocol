@@ -1,26 +1,31 @@
+#[macro_use] extern crate serde_json;
 extern crate webextension_protocol as protocol;
 
-use std::fs::File;
-use std::fs;
+use std::{
+    fs::{
+        self,
+        File
+    },
+    io
+};
+use serde_json::Value as Json;
 
 #[test]
 fn read_fixture_test() {
     let file = File::open("tests/fixtures/simple.json").unwrap();
-    let input = protocol::Input::File(file);
-    let string = protocol::read(input).unwrap();
-    assert_eq!(string, "{\"a\":1}");
+    let string = protocol::read::<Json, _>(file).unwrap();
+    assert_eq!(string, json!({"a": 1}));
 }
 
 #[test]
-fn write_read_test() {
+fn write_read_test() -> io::Result<()> {
     let file_path = "/tmp/test.json";
-    let string = "{\"a\":1}";
+    let value = json!({"a": 1});
     let file = File::create(file_path).unwrap();
-    let output = protocol::Output::File(file);
-    protocol::write(output, string.to_string());
+    protocol::write(file, &value)?;
     let file2 = File::open(file_path).unwrap();
-    let input = protocol::Input::File(file2);
-    let read_string = protocol::read(input).unwrap();
-    assert_eq!(read_string, string);
+    let read_value = protocol::read::<Json, _>(file2).unwrap();
+    assert_eq!(read_value, value);
     fs::remove_file(file_path).unwrap();
+    Ok(())
 }

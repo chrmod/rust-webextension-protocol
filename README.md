@@ -1,6 +1,6 @@
 # Webextension native messaging protocol helpers for Rust
 
-This repository is a set of helper functions for working with
+This repository is a set of helper functions for working with the
 Native Messaging protocol, which is a way for webextension to exchange messages
 with native applications.
 
@@ -13,19 +13,19 @@ Read more about native messaging here:
 Simple echo application:
 
 ```rust
-#[macro_use(println_stderr)]
-extern crate webextension_rust_template as protocol;
-use std::io::Write;
-use std::process;
+use std::{
+    io::{
+        self,
+        Write
+    },
+    process
+};
 
-fn main() {
+fn main() -> io::Result<()> {
     loop {
-        let message = match protocol::read_stdin() {
-            Ok(m) => m,
-            Err(_) => process::exit(1),
-        };
-        println_stderr!("received {}", message);
-        protocol::write_stdout(message);
+        let message = webextension_protocol::read_stdin::<String>()?;
+        eprintln!("received {}", message);
+        webextension_protocol::write_stdout(&message)?;
     }
 }
 ```
