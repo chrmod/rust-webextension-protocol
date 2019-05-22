@@ -1,16 +1,11 @@
-#[macro_use(println_stderr)]
 extern crate webextension_protocol as protocol;
-use std::io::Write;
-use std::process;
+use std::io;
 
-fn main() {
+fn main() -> io::Result<()> {
     loop {
-        let message = match protocol::read_stdin() {
-            Ok(m) => m,
-            Err(_) => process::exit(1),
-        };
-        println_stderr!("received {}", message);
-        protocol::write_stdout(&message);
+        let message = protocol::read_stdin::<String>()?;
+        eprintln!("received {}", message);
+        protocol::write_stdout(&message)?;
     }
 }
 

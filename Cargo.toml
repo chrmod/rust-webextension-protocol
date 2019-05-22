@@ -1,11 +1,19 @@
 [package]
 name = "webextension-protocol"
-version = "0.1.0"
-authors = ["Krzysztof Jan Modras <chrmod@chrmod.net>"]
+version = "1.0.0"
+authors = [
+    "Krzysztof Jan Modras <chrmod@chrmod.net>",
+    "Max Dominik Weber <fenhl@fenhl.net>"
+]
 description = "Webextension native messaging protocol helpers"
 license = "AGPL-3.0"
-
-[dependencies]
-byteorder = "1.0.0"
+edition = "2018"
 
 [lib]
+name = "webextension_protocol"
+path = "src/lib.rs"
+
+[dependencies]
+byteorder = "1"
+serde = "1"
+serde_json = "1"
